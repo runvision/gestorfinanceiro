@@ -60,6 +60,7 @@
     <p>Gastos: <strong id="totalGastos"></strong></p>
     <h3>Saldo: <span id="saldo"></span></h3>
     <div id="alerta" class="alerta"></div>
+    <button onclick="exportPDF()">📄 Exportar Relatório em PDF</button>
   </section>
 
   <section class="card">
@@ -68,7 +69,7 @@
   </section>
 
 </main>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
