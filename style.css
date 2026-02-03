@@ -70,6 +70,22 @@ li {
 
 .alerta {
     margin-top: 10px;
+
+    .remove {
+  margin-left: 10px;
+  background: #ef4444;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.remove:hover {
+  background: #dc2626;
+}
+
     font-weight: bold;
     color: #dc2626;
 }
+
