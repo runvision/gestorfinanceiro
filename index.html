@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestão 50/30/20</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>💰 Finance</h1>
+  <p>Gestão financeira inteligente • Regra 50/30/20</p>
+</header>
+
+<main class="container">
+
+  <section class="card">
+    <h2>📅 Período</h2>
+    <label for="periodo"></label><input type="month" id="periodo">
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Entradas</h2>
+      <label for="capitalDesc"></label><input id="capitalDesc" placeholder="Salário / Extra">
+      <label for="capitalVal"></label><input id="capitalVal" type="number" placeholder="Valor">
+      <button onclick="addCapital()">Adicionar</button>
+      <ul id="capitalList"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Dívidas</h2>
+      <label for="dividaNome"></label><input id="dividaNome" placeholder="Cartão / Empréstimo">
+      <label for="dividaTotal"></label><input id="dividaTotal" type="number" placeholder="Valor total">
+      <label for="dividaParcelas"></label><input id="dividaParcelas" type="number" placeholder="Parcelas">
+      <button onclick="addDivida()">Adicionar</button>
+      <ul id="dividaList"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Gastos</h2>
+      <label for="gastoDesc"></label><input id="gastoDesc" placeholder="Uber, Almoço...">
+      <label for="gastoVal"></label><input id="gastoVal" type="number" placeholder="Valor">
+      <label for="gastoCat"></label><select id="gastoCat">
+        <option value="necessidades">Necessidades</option>
+        <option value="desejos">Desejos</option>
+      </select>
+      <button onclick="addGasto()">Adicionar</button>
+      <ul id="gastoList"></ul>
+    </div>
+  </section>
+
+  <section class="card resumo">
+    <h2>Resumo Financeiro</h2>
+    <p>Entradas: R$ <span id="totalCapital">0</span></p>
+    <p>Dívidas Mensais: R$ <span id="totalDividas">0</span></p>
+    <p>Gastos: R$ <span id="totalGastos">0</span></p>
+    <h3>Saldo: R$ <span id="saldo"></span></h3>
+
+    <div class="alerta" id="alerta"></div>
+  </section>
+
+  <section class="card">
+    <h2>Regra 50/30/20</h2>
+    <canvas id="chart"></canvas>
+  </section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
