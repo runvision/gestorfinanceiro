@@ -54,16 +54,51 @@ function addGasto() {
 function render() {
   // Listas
   capitalList.innerHTML = state.capital
-      .map(c => `<li>${c.desc} - R$ ${c.val.toFixed(2)}</li>`)
-      .join('');
+  .map((c, i) => `
+    <li>
+      ${c.desc} - R$ ${c.val.toFixed(2)}
+      <button class="remove" onclick="removeCapital(${i})">✖</button>
+    </li>
+  `)
+  .join('');
+
 
   dividaList.innerHTML = state.dividas
-      .map(d => `<li>${d.nome} - R$ ${d.mensal.toFixed(2)}</li>`)
-      .join('');
+  .map((d, i) => `
+    <li>
+      ${d.nome} - R$ ${d.mensal.toFixed(2)}
+      <button class="remove" onclick="removeDivida(${i})">✖</button>
+    </li>
+  `)
+  .join('');
 
   gastoList.innerHTML = state.gastos
-      .map(g => `<li>${g.desc} (${g.cat}) - R$ ${g.val.toFixed(2)}</li>`)
-      .join('');
+  .map((g, i) => `
+    <li>
+      ${g.desc} (${g.cat}) - R$ ${g.val.toFixed(2)}
+      <button class="remove" onclick="removeGasto(${i})">✖</button>
+    </li>
+  `)
+  .join('');
+
+  function removeCapital(index) {
+  state.capital.splice(index, 1);
+  save();
+  render();
+}
+
+function removeDivida(index) {
+  state.dividas.splice(index, 1);
+  save();
+  render();
+}
+
+function removeGasto(index) {
+  state.gastos.splice(index, 1);
+  save();
+  render();
+}
+
 
   // Totais
   const totalCapital = state.capital.reduce((a, b) => a + b.val, 0);
