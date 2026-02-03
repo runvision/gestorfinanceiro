@@ -274,4 +274,115 @@ function renderChart(l50, l30, l20, nec, des) {
     chart.update();
   }
 }
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  let y = 20;
+  const line = (text) => {
+    doc.text(text, 20, y);
+    y += 8;
+  };
+
+  // ===== DADOS =====
+  const totalCapital = state.capital.reduce((a,b)=>a+b.val,0);
+  const totalDividas = state.dividas.reduce((a,b)=>a+b.mensal,0);
+  const totalGastos = state.gastos.reduce((a,b)=>a+b.val,0);
+  const saldo = totalCapital - totalDividas - totalGastos;
+
+  const limite50 = totalCapital * 0.5;
+  const limite30 = totalCapital * 0.3;
+  const limite20 = totalCapital * 0.2;
+
+  const gastoNec = state.gastos.filter(g=>g.cat==='necessidades').reduce((a,b)=>a+b.val,0);
+  const gastoDes = state.gastos.filter(g=>g.cat==='desejos').reduce((a,b)=>a+b.val,0);
+
+  // ===== CABEÇALHO =====
+  doc.setFontSize(16);
+  line('Finance SaaS — Relatório Financeiro Mensal');
+  doc.setFontSize(10);
+  line(`Período: ${periodo.value}`);
+  line(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`);
+  y += 6;
+
+  // ===== RESUMO =====
+  doc.setFontSize(14);
+  line('Resumo Financeiro');
+  doc.setFontSize(11);
+  line(`Entradas: ${formatMoney(totalCapital)}`);
+  line(`Gastos: ${formatMoney(totalGastos)}`);
+  line(`Dívidas Mensais: ${formatMoney(totalDividas)}`);
+  line(`Saldo Final: ${formatMoney(saldo)}`);
+  y += 6;
+
+  // ===== REGRA 50/30/20 =====
+  doc.setFontSize(14);
+  line('Regra 50/30/20');
+  doc.setFontSize(11);
+  line(`Necessidades — Limite: ${formatMoney(limite50)} | Gasto: ${formatMoney(gastoNec)}`);
+  line(`Desejos — Limite: ${formatMoney(limite30)} | Gasto: ${formatMoney(gastoDes)}`);
+  line(`Investimentos — Ideal: ${formatMoney(limite20)}`);
+  y += 6;
+
+  // ===== ERROS =====
+  doc.setFontSize(14);
+  line('Principais Erros Identificados');
+  doc.setFontSize(11);
+
+  let erros = [];
+
+  if (gastoNec > limite50) {
+    erros.push('Gastos essenciais acima de 50% do capital.');
+    line('• Necessidades acima do limite recomendado.');
+  }
+
+  if (gastoDes > limite30) {
+    erros.push('Gastos com desejos acima de 30%.');
+    line('• Desejos acima do limite recomendado.');
+  }
+
+  if (totalDividas > totalCapital * 0.3) {
+    erros.push('Dívidas consomem grande parte da renda.');
+    line('• Dívidas estão muito altas em relação à renda.');
+  }
+
+  if (saldo < 0) {
+    erros.push('Saldo negativo no fechamento do mês.');
+    line('• Saldo negativo.');
+  }
+
+  if (erros.length === 0) {
+    line('• Nenhum erro crítico identificado. Boa gestão!');
+  }
+
+  y += 6;
+
+  // ===== RECOMENDAÇÕES =====
+  doc.setFontSize(14);
+  line('Recomendações para o Próximo Mês');
+  doc.setFontSize(11);
+
+  if (gastoDes > limite30) {
+    line('• Reduzir gastos com desejos (lazer, delivery, apps).');
+  }
+
+  if (gastoNec > limite50) {
+    line('• Revisar gastos fixos como aluguel, mercado e transporte.');
+  }
+
+  if (totalDividas > totalCapital * 0.3) {
+    line('• Priorizar quitação ou renegociação de dívidas.');
+  }
+
+  if (saldo > 0 && saldo < limite20) {
+    line('• Aumentar reserva ou investimentos mensais.');
+  }
+
+  if (saldo >= limite20) {
+    line('• Excelente! Continue fortalecendo sua reserva financeira.');
+  }
+
+  // ===== SALVAR =====
+  doc.save(`Relatorio_Financeiro_${periodo.value}.pdf`);
+}
 
