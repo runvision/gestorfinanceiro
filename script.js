@@ -1,32 +1,39 @@
-let state = {
-  capital: [],
-  gastos: [],
-  dividas: []
-};
-
 let chart;
+const locale = 'pt-BR';
+const currency = 'BRL';
 
-const periodoInput = document.getElementById('periodo');
+let state = { capital: [], gastos: [], dividas: [] };
 
-periodoInput.value = new Date().toISOString().slice(0,7);
-load();
+const periodo = document.getElementById('periodo');
+periodo.value = new Date().toISOString().slice(0,7);
+
+periodo.addEventListener('change', load);
+
+function formatMoney(v) {
+  return v.toLocaleString(locale, { style: 'currency', currency });
+}
+
+function parseMoney(v) {
+  return Number(v.replace(/\D/g,'')) / 100;
+}
 
 function save() {
-  localStorage.setItem(periodoInput.value, JSON.stringify(state));
+  localStorage.setItem(periodo.value, JSON.stringify(state));
 }
 
 function load() {
-  const data = localStorage.getItem(periodoInput.value);
-  state = data ? JSON.parse(data) : { capital: [], gastos: [], dividas: [] };
+  state = JSON.parse(localStorage.getItem(periodo.value)) || { capital: [], gastos: [], dividas: [] };
   render();
 }
 
-periodoInput.addEventListener('change', load);
+load();
+
+/* ===== ADD ===== */
 
 function addCapital() {
   state.capital.push({
     desc: capitalDesc.value,
-    val: +capitalVal.value
+    val: parseMoney(capitalVal.value)
   });
   capitalDesc.value = capitalVal.value = '';
   save(); render();
@@ -35,7 +42,7 @@ function addCapital() {
 function addDivida() {
   state.dividas.push({
     nome: dividaNome.value,
-    mensal: (+dividaTotal.value / +dividaParcelas.value)
+    mensal: parseMoney(dividaTotal.value) / dividaParcelas.value
   });
   dividaNome.value = dividaTotal.value = dividaParcelas.value = '';
   save(); render();
@@ -44,122 +51,109 @@ function addDivida() {
 function addGasto() {
   state.gastos.push({
     desc: gastoDesc.value,
-    val: +gastoVal.value,
+    val: parseMoney(gastoVal.value),
     cat: gastoCat.value
   });
   gastoDesc.value = gastoVal.value = '';
   save(); render();
 }
 
+/* ===== REMOVE ===== */
+
+function confirmRemove(callback) {
+  if (confirm('Deseja realmente remover este item?')) callback();
+}
+
+function removeCapital(i) {
+  confirmRemove(() => {
+    state.capital.splice(i,1);
+    save(); render();
+  });
+}
+
+function removeDivida(i) {
+  confirmRemove(() => {
+    state.dividas.splice(i,1);
+    save(); render();
+  });
+}
+
+function removeGasto(i) {
+  confirmRemove(() => {
+    state.gastos.splice(i,1);
+    save(); render();
+  });
+}
+
+/* ===== EDIT INLINE ===== */
+
+function editItem(list, i, field) {
+  const novo = prompt('Digite o novo valor (ex: 1000):');
+  if (!novo) return;
+  state[list][i][field] = parseMoney(novo);
+  save(); render();
+}
+
+/* ===== RENDER ===== */
+
 function render() {
-  // Listas
-  capitalList.innerHTML = state.capital
-  .map((c, i) => `
+  capitalList.innerHTML = state.capital.map((c,i)=>`
     <li>
-      ${c.desc} - R$ ${c.val.toFixed(2)}
-      <button class="remove" onclick="removeCapital(${i})">✖</button>
-    </li>
-  `)
-  .join('');
+      ${c.desc} - ${formatMoney(c.val)}
+      <div class="actions">
+        <button class="edit" onclick="editItem('capital',${i},'val')">✏️</button>
+        <button class="remove" onclick="removeCapital(${i})">🗑️</button>
+      </div>
+    </li>`).join('');
 
-
-  dividaList.innerHTML = state.dividas
-  .map((d, i) => `
+  dividaList.innerHTML = state.dividas.map((d,i)=>`
     <li>
-      ${d.nome} - R$ ${d.mensal.toFixed(2)}
-      <button class="remove" onclick="removeDivida(${i})">✖</button>
-    </li>
-  `)
-  .join('');
+      ${d.nome} - ${formatMoney(d.mensal)}
+      <div class="actions">
+        <button class="edit" onclick="editItem('dividas',${i},'mensal')">✏️</button>
+        <button class="remove" onclick="removeDivida(${i})">🗑️</button>
+      </div>
+    </li>`).join('');
 
-  gastoList.innerHTML = state.gastos
-  .map((g, i) => `
+  gastoList.innerHTML = state.gastos.map((g,i)=>`
     <li>
-      ${g.desc} (${g.cat}) - R$ ${g.val.toFixed(2)}
-      <button class="remove" onclick="removeGasto(${i})">✖</button>
-    </li>
-  `)
-  .join('');
+      ${g.desc} (${g.cat}) - ${formatMoney(g.val)}
+      <div class="actions">
+        <button class="edit" onclick="editItem('gastos',${i},'val')">✏️</button>
+        <button class="remove" onclick="removeGasto(${i})">🗑️</button>
+      </div>
+    </li>`).join('');
 
-  function removeCapital(index) {
-  state.capital.splice(index, 1);
-  save();
-  render();
-}
-
-function removeDivida(index) {
-  state.dividas.splice(index, 1);
-  save();
-  render();
-}
-
-function removeGasto(index) {
-  state.gastos.splice(index, 1);
-  save();
-  render();
-}
-
-
-  // Totais
-  const totalCapital = state.capital.reduce((a, b) => a + b.val, 0);
-  const totalDividas = state.dividas.reduce((a, b) => a + b.mensal, 0);
-  const totalGastos = state.gastos.reduce((a, b) => a + b.val, 0);
+  const totalCapital = state.capital.reduce((a,b)=>a+b.val,0);
+  const totalDividas = state.dividas.reduce((a,b)=>a+b.mensal,0);
+  const totalGastos = state.gastos.reduce((a,b)=>a+b.val,0);
   const saldo = totalCapital - totalDividas - totalGastos;
 
-  // Atualiza UI
-  document.getElementById('totalCapital').textContent = totalCapital.toFixed(2);
-  document.getElementById('totalDividas').textContent = totalDividas.toFixed(2);
-  document.getElementById('totalGastos').textContent = totalGastos.toFixed(2);
-
-  const saldoEl = document.getElementById('saldo');
-  saldoEl.textContent = saldo.toFixed(2);
+  totalCapitalEl.textContent = formatMoney(totalCapital);
+  totalDividasEl.textContent = formatMoney(totalDividas);
+  totalGastosEl.textContent = formatMoney(totalGastos);
+  saldoEl.textContent = formatMoney(saldo);
   saldoEl.style.color = saldo >= 0 ? 'green' : 'red';
 
-  // Regra 50/30/20
-  const limite50 = totalCapital * 0.5;
-  const limite30 = totalCapital * 0.3;
-  const limite20 = totalCapital * 0.2;
+  const nec = state.gastos.filter(g=>g.cat==='necessidades').reduce((a,b)=>a+b.val,0);
+  const des = state.gastos.filter(g=>g.cat==='desejos').reduce((a,b)=>a+b.val,0);
 
-  const gastoNec = state.gastos
-      .filter(g => g.cat === 'necessidades')
-      .reduce((a, b) => a + b.val, 0);
+  alerta.textContent =
+    nec > totalCapital*0.5 ? '⚠️ Necessidades acima de 50%' :
+    des > totalCapital*0.3 ? '⚠️ Desejos acima de 30%' : '';
 
-  const gastoDes = state.gastos
-      .filter(g => g.cat === 'desejos')
-      .reduce((a, b) => a + b.val, 0);
-
-  // Alerta automático
-  const alerta = document.getElementById('alerta');
-  alerta.textContent = '';
-
-  if (gastoNec > limite50) {
-    alerta.textContent = '⚠️ Gastos de NECESSIDADES acima de 50%';
-  } else if (gastoDes > limite30) {
-    alerta.textContent = '⚠️ Gastos de DESEJOS acima de 30%';
-  }
-
-  // Gráfico
-  renderChart(limite50, limite30, limite20, gastoNec, gastoDes);
+  renderChart(totalCapital*0.5, totalCapital*0.3, totalCapital*0.2, nec, des);
 }
 
-
-function renderChart(n50, n30, n20, gNec, gDes) {
+function renderChart(l50,l30,l20,nec,des) {
   if(chart) chart.destroy();
-  chart = new Chart(document.getElementById('chart'), {
+  chart = new Chart(chartEl, {
     type: 'bar',
     data: {
-      labels: ['Necessidades', 'Desejos', 'Investimentos'],
+      labels: ['Necessidades','Desejos','Investimentos'],
       datasets: [
-        {
-          label: 'Limite',
-          data: [n50, n30, n20],
-          backgroundColor: '#a5b4fc'
-        },
-        {
-          label: 'Gasto',
-          data: [gNec, gDes, 0],
-          backgroundColor: '#f87171'
-        }
+        { label:'Limite', data:[l50,l30,l20] },
+        { label:'Gasto', data:[nec,des,0] }
       ]
     }
   });
