@@ -239,16 +239,39 @@ function render() {
    GRÁFICO
 ===================== */
 function renderChart(l50, l30, l20, nec, des) {
-  if (chart) chart.destroy();
+  const dataLimite = [l50, l30, l20];
+  const dataGasto = [nec, des, 0];
 
-  chart = new Chart(chartEl, {
-    type: 'bar',
-    data: {
-      labels: ['Necessidades', 'Desejos', 'Investimentos'],
-      datasets: [
-        { label: 'Limite', data: [l50, l30, l20] },
-        { label: 'Gasto', data: [nec, des, 0] }
-      ]
-    }
-  });
+  if (!chart) {
+    chart = new Chart(chartEl, {
+      type: 'bar',
+      data: {
+        labels: ['Necessidades', 'Desejos', 'Investimentos'],
+        datasets: [
+          {
+            label: 'Limite',
+            data: dataLimite,
+          },
+          {
+            label: 'Gasto',
+            data: dataGasto,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        animation: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  } else {
+    chart.data.datasets[0].data = dataLimite;
+    chart.data.datasets[1].data = dataGasto;
+    chart.update();
+  }
 }
+
